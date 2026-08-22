@@ -10,11 +10,11 @@ st.set_page_config(
 st.title("📈 Valorisation de Portefeuille Obligataire")
 
 uploaded_file = st.file_uploader(
-    "Importer le fichier Excel du portefeuille",
+    "Importer le fichier Excel",
     type=["xlsx"]
 )
 
-if uploaded_file is not None:
+if uploaded_file:
 
     try:
         portfolio_df = pd.read_excel(
@@ -33,7 +33,7 @@ if uploaded_file is not None:
 
         with col1:
             st.metric(
-                "Nombre de lignes portefeuille",
+                "Nombre d'obligations",
                 len(portfolio_df)
             )
 
@@ -58,4 +58,4 @@ if uploaded_file is not None:
         )
 
     except Exception as e:
-        st.error(f"Erreur : {e}")
+        st.error(str(e))
