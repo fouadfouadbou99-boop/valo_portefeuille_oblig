@@ -1,2 +1,3 @@
-# valo_portefeuille_oblig
-valorisation et suivi des indicateurs du portefeuille obligataisre
+# Bond Portfolio Analyzer
+
+Version nettoyée pour évolution vers Streamlit.
