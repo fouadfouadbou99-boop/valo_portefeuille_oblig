@@ -1,0 +1,47 @@
+import pandas as pd
+
+
+def portfolio_metrics(df):
+
+    market_value = (
+        df["Clean_Price"]
+        * df["Quantité"]
+    ).sum()
+
+    nominal = (
+        df["Nominal Global"]
+    ).sum()
+
+    duration = (
+        df["Modified_Duration"]
+        * df["Nominal Global"]
+    ).sum() / nominal
+
+    convexity = (
+        df["Convexity"]
+        * df["Nominal Global"]
+    ).sum() / nominal
+
+    dv01 = (
+        df["DV01"]
+        * df["Quantité"]
+    ).sum()
+
+    return pd.DataFrame({
+
+        "Metric": [
+            "Nominal Value",
+            "Market Value",
+            "Modified Duration",
+            "Convexity",
+            "DV01"
+        ],
+
+        "Value": [
+            nominal,
+            market_value,
+            duration,
+            convexity,
+            dv01
+        ]
+    })
