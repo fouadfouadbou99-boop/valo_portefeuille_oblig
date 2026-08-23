@@ -1,0 +1,26 @@
+def calculate_dirty_price(row):
+
+    price = 0
+
+    settlement = pd.to_datetime(
+        row["Date Règlement"]
+    )
+
+    rate = row["Taux_Interpole"]
+
+    for cf in row["Cash_Flows"]:
+
+        t = (
+            cf["Date"] - settlement
+        ).days / 365.25
+
+        if t > 0:
+
+            pv = (
+                cf["Amount"]
+                / ((1 + rate) ** t)
+            )
+
+            price += pv
+
+    return price
