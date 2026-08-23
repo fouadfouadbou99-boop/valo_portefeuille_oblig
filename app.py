@@ -30,6 +30,11 @@ from risk import (
     calculate_convexity
 )
 
+from reporting import (
+    generate_aggregated_metrics,
+    export_to_excel
+)
+
 st.set_page_config(
     page_title="Valorisation Portefeuille Obligataire",
     page_icon="📈",
@@ -47,7 +52,9 @@ if uploaded_file is not None:
 
     try:
 
-        # Chargement des données
+        # -------------------------
+        # Chargement
+        # -------------------------
 
         portfolio_df = load_portfolio_data(
             uploaded_file
@@ -57,32 +64,38 @@ if uploaded_file is not None:
             uploaded_file
         )
 
-        # Renommage des colonnes
+        # -------------------------
+        # Préparation
+        # -------------------------
 
         portfolio_df = rename_columns(
             portfolio_df
         )
 
-        # Maturité résiduelle
+        # -------------------------
+        # Maturité Résiduelle
+        # -------------------------
 
         portfolio_df = calculate_residual_maturity(
             portfolio_df
         )
 
-        # Interpolation de la courbe
+        # -------------------------
+        # Courbe des taux
+        # -------------------------
 
         portfolio_df = interpolate_rates(
             portfolio_df,
             curve_df
         )
 
-        # Coupon annuel
+        # -------------------------
+        # Coupons
+        # -------------------------
 
         portfolio_df = calculate_annual_coupon(
             portfolio_df
         )
-
-        # Coupon couru
 
         portfolio_df["Accrued_Coupon"] = (
             portfolio_df.apply(
@@ -91,7 +104,9 @@ if uploaded_file is not None:
             )
         )
 
+        # -------------------------
         # Cash-Flows
+        # -------------------------
 
         portfolio_df["Cash_Flows"] = (
             portfolio_df.apply(
@@ -100,7 +115,9 @@ if uploaded_file is not None:
             )
         )
 
-        # Dirty Price
+        # -------------------------
+        # Valorisation
+        # -------------------------
 
         portfolio_df["Dirty_Price"] = (
             portfolio_df.apply(
@@ -109,8 +126,6 @@ if uploaded_file is not None:
             )
         )
 
-        # Clean Price
-
         portfolio_df["Clean_Price"] = (
             portfolio_df.apply(
                 calculate_clean_price,
@@ -118,7 +133,9 @@ if uploaded_file is not None:
             )
         )
 
-        # Duration de Macaulay
+        # -------------------------
+        # Risque
+        # -------------------------
 
         portfolio_df["Macaulay_Duration"] = (
             portfolio_df.apply(
@@ -127,16 +144,12 @@ if uploaded_file is not None:
             )
         )
 
-        # Duration Modifiée
-
         portfolio_df["Modified_Duration"] = (
             portfolio_df.apply(
                 calculate_modified_duration,
                 axis=1
             )
         )
-
-        # DV01
 
         portfolio_df["DV01"] = (
             portfolio_df.apply(
@@ -145,8 +158,6 @@ if uploaded_file is not None:
             )
         )
 
-        # Convexité
-
         portfolio_df["Convexity"] = (
             portfolio_df.apply(
                 calculate_convexity,
@@ -154,40 +165,63 @@ if uploaded_file is not None:
             )
         )
 
+        # -------------------------
         # Valorisation globale
+        # -------------------------
 
         portfolio_df["Global_Valuation"] = (
             portfolio_df["Clean_Price"]
             * portfolio_df["Quantite"]
         )
 
-        # KPIs
+        # -------------------------
+        # Reporting
+        # -------------------------
 
-        st.success("Valorisation réalisée avec succès")
+        aggregated_df = (
+            generate_aggregated_metrics(
+                portfolio_df
+            )
+        )
+
+        # -------------------------
+        # KPIs
+        # -------------------------
+
+        st.success(
+            "Valorisation réalisée avec succès"
+        )
 
         col1, col2, col3 = st.columns(3)
 
         with col1:
+
             st.metric(
                 "Nombre d'obligations",
                 len(portfolio_df)
             )
 
         with col2:
+
             st.metric(
                 "Points de courbe",
                 len(curve_df)
             )
 
         with col3:
+
             st.metric(
                 "Nominal Global",
                 f"{portfolio_df['Nominal_Global'].sum():,.0f} MAD"
             )
 
-        # Résultats
+        # -------------------------
+        # Résultats détaillés
+        # -------------------------
 
-        st.subheader("Résultats de Valorisation")
+        st.subheader(
+            "Résultats de Valorisation"
+        )
 
         st.dataframe(
             portfolio_df[
@@ -207,6 +241,35 @@ if uploaded_file is not None:
                 ]
             ],
             use_container_width=True
+        )
+
+        # -------------------------
+        # Reporting agrégé
+        # -------------------------
+
+        st.subheader(
+            "Reporting Agrégé"
+        )
+
+        st.dataframe(
+            aggregated_df,
+            use_container_width=True
+        )
+
+        # -------------------------
+        # Export Excel
+        # -------------------------
+
+        excel_file = export_to_excel(
+            portfolio_df,
+            aggregated_df
+        )
+
+        st.download_button(
+            label="📥 Télécharger le rapport Excel",
+            data=excel_file,
+            file_name="portfolio_analysis_report.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
 
     except Exception as e:
