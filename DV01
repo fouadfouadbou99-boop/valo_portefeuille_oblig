@@ -1,0 +1,7 @@
+def calculate_dv01(row):
+
+    return (
+        row["Modified_Duration"]
+        * row["Dirty_Price"]
+        * 0.0001
+    )
