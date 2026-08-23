@@ -1,0 +1,6 @@
+def calculate_clean_price(row):
+
+    return (
+        row["Dirty_Price"]
+        - row["Accrued_Coupon"]
+    )
