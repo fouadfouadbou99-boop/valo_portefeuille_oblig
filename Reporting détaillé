@@ -1,0 +1,27 @@
+def generate_report(df):
+
+    columns = [
+
+        "Code",
+        "Description Titres",
+
+        "Nominal Global",
+
+        "Maturite_Residuelle",
+
+        "Taux_Interpole",
+
+        "Annual_Coupon",
+        "Accrued_Coupon",
+
+        "Dirty_Price",
+        "Clean_Price",
+
+        "Macaulay_Duration",
+        "Modified_Duration",
+
+        "DV01",
+        "Convexity"
+    ]
+
+    return df[columns]
