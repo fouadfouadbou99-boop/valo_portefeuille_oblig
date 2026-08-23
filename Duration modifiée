@@ -1,0 +1,6 @@
+def calculate_modified_duration(row):
+
+    return (
+        row["Macaulay_Duration"]
+        / (1 + row["Taux_Interpole"])
+    )
