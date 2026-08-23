@@ -1,0 +1,31 @@
+def calculate_macaulay_duration(row):
+
+    settlement = pd.to_datetime(
+        row["Date Règlement"]
+    )
+
+    rate = row["Taux_Interpole"]
+
+    dirty_price = row["Dirty_Price"]
+
+    if dirty_price == 0:
+        return 0
+
+    weighted_sum = 0
+
+    for cf in row["Cash_Flows"]:
+
+        t = (
+            cf["Date"] - settlement
+        ).days / 365.25
+
+        if t > 0:
+
+            pv = (
+                cf["Amount"]
+                / ((1 + rate) ** t)
+            )
+
+            weighted_sum += t * pv
+
+    return weighted_sum / dirty_price
