@@ -1,0 +1,50 @@
+import pandas as pd
+
+
+def generate_cashflows(row):
+
+    nominal = row["Nominal Unitaire"]
+    taux = row["Taux facial"]
+
+    settlement = pd.to_datetime(
+        row["Date Règlement"]
+    )
+
+    maturity = pd.to_datetime(
+        row["Date Echéance"]
+    )
+
+    enjoyment = pd.to_datetime(
+        row["Date Jouissance"]
+    )
+
+    coupon = nominal * taux
+
+    cashflows = []
+
+    current_date = enjoyment
+
+    while current_date <= settlement:
+        current_date += pd.DateOffset(years=1)
+
+    while current_date <= maturity:
+
+        cashflows.append(
+            {
+                "Date": current_date,
+                "Type": "Coupon",
+                "Amount": coupon
+            }
+        )
+
+        current_date += pd.DateOffset(years=1)
+
+    cashflows.append(
+        {
+            "Date": maturity,
+            "Type": "Principal",
+            "Amount": nominal
+        }
+    )
+
+    return cashflows
