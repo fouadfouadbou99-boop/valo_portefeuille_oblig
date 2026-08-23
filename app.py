@@ -43,7 +43,7 @@ uploaded_file = st.file_uploader(
     type=["xlsx"]
 )
 
-if uploaded_file:
+if uploaded_file is not None:
 
     try:
 
@@ -57,19 +57,19 @@ if uploaded_file:
             uploaded_file
         )
 
-        # Préparation
+        # Renommage des colonnes
 
         portfolio_df = rename_columns(
             portfolio_df
         )
 
-        # Calcul maturité résiduelle
+        # Maturité résiduelle
 
         portfolio_df = calculate_residual_maturity(
             portfolio_df
         )
 
-        # Interpolation
+        # Interpolation de la courbe
 
         portfolio_df = interpolate_rates(
             portfolio_df,
@@ -91,7 +91,7 @@ if uploaded_file:
             )
         )
 
-        # Cash flows
+        # Cash-Flows
 
         portfolio_df["Cash_Flows"] = (
             portfolio_df.apply(
@@ -118,7 +118,7 @@ if uploaded_file:
             )
         )
 
-        # Risk metrics
+        # Duration de Macaulay
 
         portfolio_df["Macaulay_Duration"] = (
             portfolio_df.apply(
@@ -127,12 +127,16 @@ if uploaded_file:
             )
         )
 
+        # Duration Modifiée
+
         portfolio_df["Modified_Duration"] = (
             portfolio_df.apply(
                 calculate_modified_duration,
                 axis=1
             )
         )
+
+        # DV01
 
         portfolio_df["DV01"] = (
             portfolio_df.apply(
@@ -141,9 +145,72 @@ if uploaded_file:
             )
         )
 
+        # Convexité
+
         portfolio_df["Convexity"] = (
             portfolio_df.apply(
                 calculate_convexity,
                 axis=1
             )
+        )
+
+        # Valorisation globale
+
+        portfolio_df["Global_Valuation"] = (
+            portfolio_df["Clean_Price"]
+            * portfolio_df["Quantite"]
+        )
+
+        # KPIs
+
+        st.success("Valorisation réalisée avec succès")
+
+        col1, col2, col3 = st.columns(3)
+
+        with col1:
+            st.metric(
+                "Nombre d'obligations",
+                len(portfolio_df)
+            )
+
+        with col2:
+            st.metric(
+                "Points de courbe",
+                len(curve_df)
+            )
+
+        with col3:
+            st.metric(
+                "Nominal Global",
+                f"{portfolio_df['Nominal_Global'].sum():,.0f} MAD"
+            )
+
+        # Résultats
+
+        st.subheader("Résultats de Valorisation")
+
+        st.dataframe(
+            portfolio_df[
+                [
+                    "Code",
+                    "Description_Titres",
+                    "Maturite_Residuelle",
+                    "Taux_Interpole",
+                    "Annual_Coupon",
+                    "Accrued_Coupon",
+                    "Dirty_Price",
+                    "Clean_Price",
+                    "Macaulay_Duration",
+                    "Modified_Duration",
+                    "DV01",
+                    "Convexity"
+                ]
+            ],
+            use_container_width=True
+        )
+
+    except Exception as e:
+
+        st.error(
+            f"Erreur lors du traitement : {str(e)}"
         )
