@@ -1,1 +1,31 @@
+def calculate_accrued_coupon(row):
 
+    nominal = row["Nominal Unitaire"]
+    taux = row["Taux facial"]
+
+    settlement = pd.to_datetime(
+        row["Date Règlement"]
+    )
+
+    last_coupon = pd.to_datetime(
+        row["Date Jouissance"]
+    )
+
+    while last_coupon + pd.DateOffset(years=1) <= settlement:
+        last_coupon += pd.DateOffset(years=1)
+
+    next_coupon = last_coupon + pd.DateOffset(years=1)
+
+    elapsed = (
+        settlement - last_coupon
+    ).days
+
+    total = (
+        next_coupon - last_coupon
+    ).days
+
+    accrued = (
+        elapsed / total
+    ) * nominal * taux
+
+    return accrued
