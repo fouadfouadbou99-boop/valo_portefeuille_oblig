@@ -1,6 +1,35 @@
 import streamlit as st
 import pandas as pd
 
+from data_loader import (
+    load_portfolio_data,
+    load_curve_data
+)
+
+from data_preprocessing import (
+    rename_columns
+)
+
+from valuation import (
+    calculate_residual_maturity,
+    calculate_annual_coupon,
+    calculate_accrued_coupon,
+    generate_cashflows,
+    calculate_dirty_price,
+    calculate_clean_price
+)
+
+from yield_curve import (
+    interpolate_rates
+)
+
+from risk import (
+    calculate_macaulay_duration,
+    calculate_modified_duration,
+    calculate_dv01,
+    calculate_convexity
+)
+
 st.set_page_config(
     page_title="Valorisation Portefeuille Obligataire",
     page_icon="📈",
@@ -17,45 +46,103 @@ uploaded_file = st.file_uploader(
 if uploaded_file:
 
     try:
-        portfolio_df = pd.read_excel(
-            uploaded_file,
-            sheet_name="portfolio_data"
+
+        # Chargement des données
+
+        portfolio_df = load_portfolio_data(
+            uploaded_file
         )
 
-        curve_df = pd.read_excel(
-            uploaded_file,
-            sheet_name="curve_rate"
+        curve_df = load_curve_data(
+            uploaded_file
         )
 
-        st.success("Fichier chargé avec succès")
+        # Préparation
 
-        col1, col2 = st.columns(2)
+        portfolio_df = rename_columns(
+            portfolio_df
+        )
 
-        with col1:
-            st.metric(
-                "Nombre d'obligations",
-                len(portfolio_df)
-            )
+        # Calcul maturité résiduelle
 
-        with col2:
-            st.metric(
-                "Points de courbe",
-                len(curve_df)
-            )
+        portfolio_df = calculate_residual_maturity(
+            portfolio_df
+        )
 
-        st.subheader("Portefeuille")
+        # Interpolation
 
-        st.dataframe(
+        portfolio_df = interpolate_rates(
             portfolio_df,
-            use_container_width=True
+            curve_df
         )
 
-        st.subheader("Courbe des taux")
+        # Coupon annuel
 
-        st.dataframe(
-            curve_df,
-            use_container_width=True
+        portfolio_df = calculate_annual_coupon(
+            portfolio_df
         )
 
-    except Exception as e:
-        st.error(str(e))
+        # Coupon couru
+
+        portfolio_df["Accrued_Coupon"] = (
+            portfolio_df.apply(
+                calculate_accrued_coupon,
+                axis=1
+            )
+        )
+
+        # Cash flows
+
+        portfolio_df["Cash_Flows"] = (
+            portfolio_df.apply(
+                generate_cashflows,
+                axis=1
+            )
+        )
+
+        # Dirty Price
+
+        portfolio_df["Dirty_Price"] = (
+            portfolio_df.apply(
+                calculate_dirty_price,
+                axis=1
+            )
+        )
+
+        # Clean Price
+
+        portfolio_df["Clean_Price"] = (
+            portfolio_df.apply(
+                calculate_clean_price,
+                axis=1
+            )
+        )
+
+        # Risk metrics
+
+        portfolio_df["Macaulay_Duration"] = (
+            portfolio_df.apply(
+                calculate_macaulay_duration,
+                axis=1
+            )
+        )
+
+        portfolio_df["Modified_Duration"] = (
+            portfolio_df.apply(
+                calculate_modified_duration,
+                axis=1
+            )
+        )
+
+        portfolio_df["DV01"] = (
+            portfolio_df.apply(
+                calculate_dv01,
+                axis=1
+            )
+        )
+
+        portfolio_df["Convexity"] = (
+            portfolio_df.apply(
+                calculate_convexity,
+                axis=1
+            )
